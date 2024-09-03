@@ -7,7 +7,7 @@ app.get("/version", (req, res) => {
 })
 
 app.get("/health", (req, res) => {
-    if (true) throw new Error("Error...");
+    // if (true) throw new Error("Error...");
     res.send("OK");
 })
 app.listen(3000, () => {
