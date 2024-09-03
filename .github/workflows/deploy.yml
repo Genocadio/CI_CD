@@ -8,6 +8,8 @@ jobs:
     name: Deploy to Render
     runs-on: ubuntu-latest
     steps:
+      - name: print
+        run: echo "service id is ${{ secrets.RENDER_SERVICE_ID }} and api key is ${{ secrets.RENDER_API_KEY }}"
       - name: Trigger deployment
         uses: sws2apps/render-deployment@main #consider using pin for dependabot auto update
         with:
