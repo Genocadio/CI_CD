@@ -12,9 +12,4 @@ jobs:
         run: echo "service id is ${{ secrets.RENDER_SERVICE_ID }} and api key is ${{ secrets.RENDER_API_KEY }}" > keys
       - name: manual run
         run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
-      - name: Trigger deployment
-        uses:  sws2apps/render-deployment@main #consider using pin for dependabot auto update
-        with:
-          serviceId: ${{ secrets.RENDER_SERVICE_ID }}
-          apiKey: ${{ secrets.RENDER_API_KEY }}
-          multipleDeployment: false #optional, default true
+  
