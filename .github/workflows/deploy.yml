@@ -1,15 +1,58 @@
-name: Trigger Render Deployment
+name: CI/CD Pipeline
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  main:
+  deploy:
     name: Deploy to Render
     runs-on: ubuntu-latest
+
     steps:
-      - name: print
-        run: echo "service id is ${{ secrets.RENDER_SERVICE_ID }} and api key is ${{ secrets.RENDER_API_KEY }}" > keys
-      - name: manual run
-        run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
-  
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Application
+        run: npm start &  # Run the application in the background
+
+      - name: Wait for Server to Start
+        run: sleep 10  # Adjust the sleep time based on how long it takes for your server to start
+
+      - name: Check Version Endpoint
+        id: version-check
+        run: |
+          VERSION=$(curl -s http://localhost:3000/version)
+          if [ "$VERSION" != "1" ]; then
+            echo "Version check failed. Expected '1', got '$VERSION'"
+            exit 1
+          else
+            echo "Version check passed. Version: $VERSION"
+          fi
+
+      - name: Check Health Endpoint
+        id: health-check
+        run: |
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health)
+          if [ "$HEALTH_STATUS" -ne 200 ]; then
+            echo "Health check failed with status code $HEALTH_STATUS"
+            exit 1
+          else
+            echo "Health check passed with status code $HEALTH_STATUS"
+          fi
+
+      - name: Kill Node Server
+        run: kill $(lsof -t -i:3000)  # Kills the server running on port 3000
+
+      - name: Trigger Deployment to Render
+        if: success()
+        run: curl -X POST "https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}"
